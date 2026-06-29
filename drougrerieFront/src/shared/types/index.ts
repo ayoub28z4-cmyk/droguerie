@@ -40,8 +40,10 @@ export interface Client {
   id: number
   nom: string
   prenom?: string
+  nom_complet?: string
   raison_sociale?: string
   type_client: 'particulier' | 'professionnel' | 'entreprise'
+  type_client_label?: string
   telephone: string
   email?: string
   adresse?: string
@@ -51,8 +53,12 @@ export interface Client {
   solde_du: number
   credit_disponible: number
   actif: boolean
+  a_compte?: boolean
+  statut_inscription?: 'en_attente' | 'valide' | 'rejete' | null
+  statut_inscription_label?: string | null
+  motif_rejet?: string | null
   created_at: string
-  updated_at: string
+  updated_at?: string
 }
 
 export interface ClientAuthResponse {

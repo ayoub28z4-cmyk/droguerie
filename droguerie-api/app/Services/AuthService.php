@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Enums\StatutInscription;
 use App\Models\ClientAccount;
 use App\Models\Personnel;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
@@ -20,9 +23,17 @@ class AuthService
             ]);
         }
 
-        $token = $personnel->createToken('personnel-token', ['*'], now()->addDays(7))->plainTextToken;
+        return DB::transaction(function () use ($personnel) {
+            PersonalAccessToken::where('tokenable_type', $personnel->getMorphClass())
+                ->where('tokenable_id', $personnel->id)
+                ->whereNotNull('expires_at')
+                ->where('expires_at', '<', now())
+                ->delete();
 
-        return ['token' => $token, 'user' => $personnel];
+            $token = $personnel->createToken('personnel-token', ['*'], now()->addDays(7))->plainTextToken;
+
+            return ['token' => $token, 'user' => $personnel];
+        });
     }
 
     /** @return array{token: string, user: ClientAccount} */
@@ -30,7 +41,6 @@ class AuthService
     {
         $account = ClientAccount::with('client')
             ->where('email', $email)
-            ->where('actif', true)
             ->first();
 
         if (! $account || ! Hash::check($password, $account->password)) {
@@ -39,11 +49,39 @@ class AuthService
             ]);
         }
 
-        $account->update(['last_login_at' => now()]);
+        $statut = $account->client?->statut_inscription;
 
-        $token = $account->createToken('client-token', ['*'], now()->addDays(30))->plainTextToken;
+        if ($statut === StatutInscription::EnAttente) {
+            throw ValidationException::withMessages([
+                'email' => ['Votre compte est en attente de validation par l\'administrateur.'],
+            ]);
+        }
 
-        return ['token' => $token, 'user' => $account];
+        if ($statut === StatutInscription::Rejete) {
+            throw ValidationException::withMessages([
+                'email' => ['Votre demande d\'inscription a été rejetée. Contactez l\'administrateur.'],
+            ]);
+        }
+
+        if (! $account->actif) {
+            throw ValidationException::withMessages([
+                'email' => ['Ce compte est désactivé.'],
+            ]);
+        }
+
+        return DB::transaction(function () use ($account) {
+            PersonalAccessToken::where('tokenable_type', $account->getMorphClass())
+                ->where('tokenable_id', $account->id)
+                ->whereNotNull('expires_at')
+                ->where('expires_at', '<', now())
+                ->delete();
+
+            $account->update(['last_login_at' => now()]);
+
+            $token = $account->createToken('client-token', ['*'], now()->addDays(30))->plainTextToken;
+
+            return ['token' => $token, 'user' => $account];
+        });
     }
 
     public function logoutPersonnel(Personnel $personnel): void

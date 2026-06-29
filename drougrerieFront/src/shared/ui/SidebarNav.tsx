@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Users, Truck,
   CreditCard, Boxes, ClipboardList, FileText, UserCog,
   ChevronLeft, ChevronRight, Store, BarChart3, Tags,
-  LogOut, Activity, Scan
+  LogOut, Activity, Scan, UserPlus
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { usePersonnelAuth } from '@/features/auth/personnelAuthStore'
@@ -12,6 +12,7 @@ import { AlertBadge } from './AlertBadge'
 import { usePermission } from '@/shared/hooks/usePermission'
 
 import { useStockAlertCount } from '@/features/stock/useStockAlertCount'
+import { useInscriptionCount } from '@/features/clients/useInscriptionCount'
 
 interface NavItem {
   to: string
@@ -28,6 +29,7 @@ const navItems: NavItem[] = [
   { to: '/produits',          label: 'Produits',           icon: <Package         className="h-4.5 w-4.5" />, perm: 'produits.view' },
   { to: '/categories',        label: 'Catégories',         icon: <Tags            className="h-4.5 w-4.5" />, perm: 'categories.view' },
   { to: '/clients',           label: 'Clients',            icon: <Users           className="h-4.5 w-4.5" />, perm: 'clients.view' },
+  { to: '/clients/inscriptions', label: 'Inscriptions',   icon: <UserPlus        className="h-4.5 w-4.5" />, perm: 'clients.view' },
   { to: '/fournisseurs',      label: 'Fournisseurs',       icon: <Truck           className="h-4.5 w-4.5" />, perm: 'fournisseurs.view' },
   { to: '/paiements',         label: 'Paiements',          icon: <CreditCard      className="h-4.5 w-4.5" />, perm: 'paiements.view' },
   { to: '/stock',             label: 'Stock',              icon: <Boxes           className="h-4.5 w-4.5" />, perm: 'stock.view' },
@@ -47,10 +49,14 @@ export function SidebarNav({ collapsed = false, onToggle }: SidebarNavProps) {
   const can = usePermission()
   const { personnel, logout } = usePersonnelAuth()
   const { data: alertCount = 0 } = useStockAlertCount()
+  const { data: inscriptionCount = 0 } = useInscriptionCount()
 
   const visibleItems = navItems.map((item) => {
     if (item.to === '/stock') {
       return { ...item, badge: <AlertBadge count={alertCount} /> }
+    }
+    if (item.to === '/clients/inscriptions') {
+      return { ...item, badge: <AlertBadge count={inscriptionCount} /> }
     }
     return item
   }).filter((item) => !item.perm || can(item.perm))
@@ -135,7 +141,9 @@ export function SidebarNav({ collapsed = false, onToggle }: SidebarNavProps) {
 
 function SidebarItem({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const location = useLocation()
-  const isActive = location.pathname.startsWith(item.to) && (item.to !== '/' || location.pathname === '/')
+  const isActive = item.to === '/clients'
+    ? location.pathname === '/clients' || (location.pathname.startsWith('/clients/') && !location.pathname.startsWith('/clients/inscriptions'))
+    : location.pathname.startsWith(item.to) && (item.to !== '/' || location.pathname === '/')
 
   return (
     <NavLink

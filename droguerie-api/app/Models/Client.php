@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatutInscription;
 use App\Enums\TypeClient;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,13 +18,15 @@ class Client extends Model
     protected $fillable = [
         'nom', 'prenom', 'telephone', 'email', 'adresse', 'ville', 'ice',
         'type_client', 'credit_limite', 'solde_du', 'actif',
+        'statut_inscription', 'motif_rejet',
     ];
 
     protected $casts = [
-        'type_client'   => TypeClient::class,
-        'credit_limite' => 'decimal:2',
-        'solde_du'      => 'decimal:2',
-        'actif'         => 'boolean',
+        'type_client'        => TypeClient::class,
+        'statut_inscription' => StatutInscription::class,
+        'credit_limite'      => 'decimal:2',
+        'solde_du'           => 'decimal:2',
+        'actif'              => 'boolean',
     ];
 
     public function account(): HasOne

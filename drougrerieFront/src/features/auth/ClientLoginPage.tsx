@@ -98,10 +98,18 @@ export function ClientLoginPage() {
           </Button>
         </form>
 
-        <p className="text-center text-xs text-ink-400 mt-6">
-          Accès personnel ?{' '}
-          <a href="/login" className="text-brand-600 hover:underline font-medium">Espace personnel →</a>
-        </p>
+        <div className="mt-6 space-y-3">
+          <p className="text-center text-sm text-ink-500">
+            Pas encore de compte ?{' '}
+            <a href="/portail/inscription" className="text-brand-600 hover:underline font-semibold">
+              Faire une demande d'inscription →
+            </a>
+          </p>
+          <p className="text-center text-xs text-ink-400">
+            Accès personnel ?{' '}
+            <a href="/login" className="text-brand-600 hover:underline font-medium">Espace personnel →</a>
+          </p>
+        </div>
       </motion.div>
     </div>
   )

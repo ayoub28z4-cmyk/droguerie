@@ -24,9 +24,12 @@ class ClientResource extends JsonResource
             'credit_limite'      => $this->credit_limite,
             'credit_disponible'  => $this->credit_disponible,
             'solde_du'           => $this->solde_du,
-            'actif'              => $this->actif,
-            'a_compte'           => $this->account !== null,
-            'created_at'         => $this->created_at?->toISOString(),
+            'actif'                    => $this->actif,
+            'a_compte'                 => $this->account !== null,
+            'statut_inscription'       => $this->statut_inscription?->value,
+            'statut_inscription_label' => $this->statut_inscription?->label(),
+            'motif_rejet'              => $this->motif_rejet,
+            'created_at'               => $this->created_at?->toISOString(),
         ];
     }
 }

@@ -4,6 +4,7 @@ import { AppLayout } from '@/shared/ui/AppLayout'
 import { PersonnelGuard, ClientGuard, PublicGuard, ClientPublicGuard, AccessDenied } from './guards'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { ClientLoginPage } from '@/features/auth/ClientLoginPage'
+import { ClientRegisterPage } from '@/features/auth/ClientRegisterPage'
 import { LandingPage } from '@/features/landing/LandingPage'
 
 // Lazy load all feature pages
@@ -17,6 +18,7 @@ const ProduitBarcodePage   = lazy(() => import('@/features/produits/ProduitBarco
 const CategoriesPage       = lazy(() => import('@/features/categories/CategoriesPage').then(m => ({ default: m.CategoriesPage })))
 const ClientsPage          = lazy(() => import('@/features/clients/ClientsPage').then(m => ({ default: m.ClientsPage })))
 const ClientDetailPage     = lazy(() => import('@/features/clients/ClientDetailPage').then(m => ({ default: m.ClientDetailPage })))
+const InscriptionsPage     = lazy(() => import('@/features/clients/InscriptionsPage').then(m => ({ default: m.InscriptionsPage })))
 const FournisseursPage     = lazy(() => import('@/features/fournisseurs/FournisseursPage').then(m => ({ default: m.FournisseursPage })))
 const PaiementsPage        = lazy(() => import('@/features/paiements/PaiementsPage').then(m => ({ default: m.PaiementsPage })))
 const StockPage            = lazy(() => import('@/features/stock/StockPage').then(m => ({ default: m.StockPage })))
@@ -70,6 +72,7 @@ const router = createBrowserRouter([
           { path: '/produits/:id/code-barre', element: <Suspense fallback={<PageLoader />}><ProduitBarcodePage /></Suspense> },
           { path: '/categories', element: <Suspense fallback={<PageLoader />}><CategoriesPage /></Suspense> },
           { path: '/clients', element: <Suspense fallback={<PageLoader />}><ClientsPage /></Suspense> },
+          { path: '/clients/inscriptions', element: <Suspense fallback={<PageLoader />}><InscriptionsPage /></Suspense> },
           { path: '/clients/:id', element: <Suspense fallback={<PageLoader />}><ClientDetailPage /></Suspense> },
           { path: '/fournisseurs', element: <Suspense fallback={<PageLoader />}><FournisseursPage /></Suspense> },
           { path: '/paiements', element: <Suspense fallback={<PageLoader />}><PaiementsPage /></Suspense> },
@@ -91,6 +94,7 @@ const router = createBrowserRouter([
     element: <ClientPublicGuard />,
     children: [
       { path: '/portail/login', element: <ClientLoginPage /> },
+      { path: '/portail/inscription', element: <ClientRegisterPage /> },
     ],
   },
 

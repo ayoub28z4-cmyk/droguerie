@@ -29,6 +29,7 @@ Route::prefix('personnel/auth')->group(function () {
 
 // ─── Auth Client ──────────────────────────────────────────────────────────────
 Route::prefix('client/auth')->group(function () {
+    Route::middleware('throttle:10,1')->post('register', [ClientAuthController::class, 'register']);
     Route::middleware('throttle:5,1')->post('login', [ClientAuthController::class, 'login']);
 
     Route::middleware('auth:client')->group(function () {
@@ -59,9 +60,12 @@ Route::middleware(['auth:personnel'])->group(function () {
     // Clients
     Route::get('clients', [ClientController::class, 'index']);
     Route::post('clients', [ClientController::class, 'store']);
+    Route::get('clients/inscriptions', [ClientController::class, 'inscriptions']);
     Route::get('clients/{client}', [ClientController::class, 'show']);
     Route::put('clients/{client}', [ClientController::class, 'update']);
     Route::delete('clients/{client}', [ClientController::class, 'destroy']);
+    Route::patch('clients/{client}/valider-inscription', [ClientController::class, 'validerInscription']);
+    Route::patch('clients/{client}/rejeter-inscription', [ClientController::class, 'rejeterInscription']);
 
     // Fournisseurs
     Route::get('fournisseurs', [FournisseurController::class, 'index']);

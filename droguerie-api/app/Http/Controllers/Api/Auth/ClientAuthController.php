@@ -4,14 +4,29 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginClientRequest;
+use App\Http\Requests\Auth\RegisterClientRequest;
 use App\Http\Resources\ClientResource;
 use App\Services\AuthService;
+use App\Services\ClientService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ClientAuthController extends Controller
 {
-    public function __construct(private readonly AuthService $authService) {}
+    public function __construct(
+        private readonly AuthService $authService,
+        private readonly ClientService $clientService,
+    ) {}
+
+    public function register(RegisterClientRequest $request): JsonResponse
+    {
+        $client = $this->clientService->inscrire($request->validated());
+
+        return response()->json([
+            'message' => 'Inscription enregistrée. Votre compte sera activé après validation par l\'administrateur.',
+            'data'    => new ClientResource($client),
+        ], 201);
+    }
 
     public function login(LoginClientRequest $request): JsonResponse
     {
