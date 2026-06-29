@@ -8,6 +8,7 @@ use App\Models\Commande;
 use App\Models\Paiement;
 use App\Notifications\PaiementRecuNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PaiementService
 {
@@ -16,7 +17,22 @@ class PaiementService
     public function enregistrer(array $data): Paiement
     {
         return DB::transaction(function () use ($data) {
-            $commande = Commande::findOrFail($data['commande_id']);
+            // Verrou exclusif : empêche deux requêtes simultanées de créer des doublons
+            $commande = Commande::lockForUpdate()->findOrFail($data['commande_id']);
+
+            // Recalculer le disponible en incluant les paiements en attente
+            $enAttente = $commande->paiements()
+                ->where('statut', StatutPaiement::EnAttente)
+                ->sum('montant');
+
+            $disponible = (float) $commande->reste_a_payer - (float) $enAttente;
+
+            if ((float) $data['montant'] > $disponible) {
+                $fmt = number_format($disponible, 2, ',', ' ');
+                throw ValidationException::withMessages([
+                    'montant' => ["Un paiement en attente existe déjà. Disponible restant : {$fmt} MAD."],
+                ]);
+            }
 
             $paiement = Paiement::create([
                 'commande_id'   => $commande->id,
@@ -51,7 +67,6 @@ class PaiementService
                 'reste_a_payer' => max(0, (float) $commande->montant_ttc - $totalPaye),
             ]);
 
-            // lockForUpdate() : évite la race condition si deux paiements sont validés simultanément
             $client = Client::lockForUpdate()->findOrFail($commande->client_id);
             $deduction = min((float) $paiement->montant, (float) $client->solde_du);
             if ($deduction > 0) {
@@ -66,7 +81,6 @@ class PaiementService
 
     public function rejeter(Paiement $paiement): void
     {
-        // Fix 3 : un paiement déjà validé ne peut pas être rejeté — il faudrait un remboursement.
         if ($paiement->statut === StatutPaiement::Valide) {
             throw new \DomainException(
                 'Un paiement validé ne peut pas être rejeté directement. ' .

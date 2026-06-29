@@ -3,13 +3,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { AlertTriangle } from 'lucide-react'
+import { isAxiosError } from 'axios'
 import { Modal } from '@/shared/ui/Modal'
 import { Button } from '@/shared/ui/Button'
 import { FormField, Input, SelectNative } from '@/shared/ui/FormField'
 import { commandesApi } from './commandesApi'
 import { formatMoney } from '@/shared/lib/formatters'
 import type { Commande } from '@/shared/types'
-import { getApiErrorMessage } from '@/shared/lib/apiError'
 
 const schema = z.object({
   montant: z.coerce.number().positive('Montant requis'),
@@ -26,7 +27,7 @@ interface PaiementFormProps {
 }
 
 export function PaiementForm({ commande, onClose, onSuccess }: PaiementFormProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setError, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema) as any,
     defaultValues: { montant: commande.reste_a_payer, mode_paiement: 'especes' },
   })
@@ -38,7 +39,16 @@ export function PaiementForm({ commande, onClose, onSuccess }: PaiementFormProps
       toast.success('Paiement enregistré')
       onSuccess()
     },
-    onError: () => toast.error('Erreur lors de l\'enregistrement du paiement'),
+    onError: (err) => {
+      if (isAxiosError(err) && err.response?.status === 422) {
+        const errs = err.response.data?.errors ?? {}
+        Object.entries(errs).forEach(([field, messages]) => {
+          setError(field as keyof FormData, { message: (messages as string[])[0] })
+        })
+        return
+      }
+      toast.error('Erreur lors de l\'enregistrement du paiement')
+    },
   })
 
   return (

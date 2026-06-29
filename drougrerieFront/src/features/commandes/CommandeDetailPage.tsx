@@ -166,16 +166,21 @@ export function CommandeDetailPage() {
             <div className="p-4 border-b border-ink-100 flex items-center justify-between">
               <CardTitle>Paiements</CardTitle>
               <Can perm="paiements.create">
-                {commande.reste_a_payer > 0 && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    leftIcon={<Plus className="h-3.5 w-3.5" />}
-                    onClick={() => setShowPaiementForm(true)}
-                  >
-                    Ajouter
-                  </Button>
-                )}
+                {(() => {
+                  const aEnAttente = (commande.paiements ?? []).some(p => p.statut === 'en_attente')
+                  return commande.reste_a_payer > 0 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      leftIcon={<Plus className="h-3.5 w-3.5" />}
+                      onClick={() => setShowPaiementForm(true)}
+                      disabled={aEnAttente}
+                      title={aEnAttente ? 'Un paiement est déjà en attente de validation' : undefined}
+                    >
+                      Ajouter
+                    </Button>
+                  )
+                })()}
               </Can>
             </div>
 
